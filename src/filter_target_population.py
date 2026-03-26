@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
-
+import os
 
 BASE_PATH = "/Users/kieran/Desktop/UT/biosta/Winter/CHL 8010/8010Github/CHL8010-Project/data/output"
-patient_path: str = "../data/C4MPatient.csv"
-encounter_dx_path: str = "../data/C4MEncounterdiagnosis.csv"
-lab_path: str = "../data/C4MLab.csv"
-family_path: str = "../data/C4MFamilyHistory.csv"
+encounter_dx_path = os.path.join(BASE_PATH, "encounter_dx_cleaned.csv")
+patient_path = os.path.join(BASE_PATH, "patient_cleaned.csv")
+lab_path: str = "../data/output/lab_cleaned.csv"
+family_path: str = "../data/output/family_cleaned.csv"
 censor_date = pd.to_datetime('2015-07-21')
 
 
@@ -268,18 +268,34 @@ def build_final_dataset(asthma_patient: pd.DataFrame, copd_patient: pd.DataFrame
 
 
 def filter_target_population_pipeline():
+    import os
+
+    # --- encounter_dx: try pickle first ---
+    encounter_dx_pickle = encounter_dx_path.replace(".csv", ".pkl")
     encounter_dx = pd.read_csv(
         encounter_dx_path,
         dtype=str,
         sep="|",
         engine="python",
+        quoting=3,
+        on_bad_lines="skip",
     )
-    patient = pd.read_csv(
-        patient_path,
-        dtype=str,
-        sep=",",
-        engine="python",
-    )
+    encounter_dx.to_pickle(encounter_dx_pickle)
+    # --- patient: try pickle first ---
+    patient_pickle = patient_path.replace(".csv", ".pkl")
+    if os.path.exists(patient_pickle):
+        print(f"Loading patient from pickle: {patient_pickle}")
+        patient = pd.read_pickle(patient_pickle)
+        # print(patient.head())
+    else:
+        print("Pickle not found for patient, reading CSV...")
+        patient = pd.read_csv(
+            patient_path,
+            dtype=str,
+            sep="|",
+            engine="python",
+        )
+        patient.to_pickle(patient_pickle)
 
     encounter_dx_clean = clean_column_names(encounter_dx)
     encounter_dx_condition = add_condition_column(encounter_dx_clean)

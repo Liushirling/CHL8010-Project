@@ -6,8 +6,8 @@ BASE_PATH = "/Users/kieran/Desktop/UT/biosta/Winter/CHL 8010/8010Github/CHL8010-
 files = {
     "encounter_dx": "encounter_dx_final.csv",
     "lab": "lab_final.csv",
-    "family": "family_good.csv",
-    "patient": "patient_good.csv"
+    "family": "family_final.csv",
+    "patient": "patient_final.csv"
 }
 
 
@@ -112,7 +112,7 @@ def clean_column_names(df):
 # Output cleaned dataset
 def output_df(df, output_path):
     #bad line
-    df.to_csv(output_path, index=False)
+    df.to_csv(output_path, sep = "|", index=False)
 
 
 
@@ -123,12 +123,22 @@ def clean_dataset(file_name, output_name, num_cols = []):
 
     print(f"\nCleaning: {file_name}")
 
-    df = pd.read_csv(
-        input_path,
-        dtype=str,
-        sep="|",
-        engine="python",     
-    )
+    # --- Try loading pickle first (faster) ---
+    pickle_path = input_path.replace(".csv", ".pkl")
+
+    if os.path.exists(pickle_path):
+        print(f"Loading from pickle: {pickle_path}")
+        df = pd.read_pickle(pickle_path)
+    else:
+        print("Pickle not found, reading CSV...")
+        df = pd.read_csv(
+            input_path,
+            dtype=str,
+            sep="|",
+            engine="python",
+            quoting=3,
+            on_bad_lines="skip"
+        )
     # 1. strip header quotes
     df = strip_quotes_from_header(df)
 

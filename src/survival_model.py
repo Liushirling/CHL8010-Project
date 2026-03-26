@@ -4,7 +4,8 @@ def run_survival_analysis(final_patient):
     from lifelines import KaplanMeierFitter
     from lifelines.statistics import logrank_test
     import matplotlib.pyplot as plt
-
+    print(final_patient["duration"].dtype)
+    print(final_patient["duration"].head())
     kmf = KaplanMeierFitter()
     plt.figure(figsize=(8,6))
 

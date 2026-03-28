@@ -22,13 +22,13 @@ from survival_model import run_survival_analysis
 
 
 # Constant
-patient_path: str = "../data/C4MPatient.csv"
-encounter_dx_path: str = "../data/C4MEncounterdiagnosis.csv"
-lab_path: str = "../data/C4MLab.csv"
-family_path: str = "../data/C4MFamilyHistory.csv"
+patient_path: str = "../raw/C4MPatient.csv"
+encounter_dx_path: str = "../raw/C4MEncounterdiagnosis.csv"
+lab_path: str = "../raw/C4MLab.csv"
+family_path: str = "../raw/C4MFamilyHistory.csv"
 sep: str = "|"
 chunksize: int = 100_000
-output_dir: str = "../data/output"
+output_dir: str = "../raw/output"
 censor_date = pd.to_datetime('2015-07-21')
 
 out = get_output_dir(output_dir)

@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-BASE_PATH = "/Users/kieran/Desktop/UT/biosta/Winter/CHL 8010/8010Github/CHL8010-Project/data/output"
+BASE_PATH = "../raw/output"
 
 files = {
     "encounter_dx": "encounter_dx_final.csv",

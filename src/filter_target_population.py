@@ -171,11 +171,10 @@ def build_exposure_groups(patient_with_dx: pd.DataFrame):
     aco_group = df[aco_mask].copy()
     aco_group["index_date"] = aco_group["second_asthma"] # ACO index date is 2nd asthma
 
-    # exclude if depression occurs between initial COPD and index date (2nd asthma)
+    # exclude if depression occurs on/before index date (2nd asthma)
     aco_group = aco_group[
         aco_group["depression_date"].isna() |
-        ~((aco_group["depression_date"] >= aco_group["first_copd"]) &
-          (aco_group["depression_date"] <= aco_group["index_date"]))]
+        ~(aco_group["depression_date"] <= aco_group["index_date"])]
 
     # 2. COPD
     copd_mask = (
@@ -270,6 +269,72 @@ def process_lab_data(labs_df: str, final_cohort: pd.DataFrame) -> pd.DataFrame:
     
     return merged_final
 
+# Build Diabetes by Test and Test_Result 
+def build_diabetes_patient_df(df):
+    """
+    Input：
+        df: dataframe, includes 
+            - Patient_ID
+            - Test
+            - Test_Results
+    
+    Output：
+        patient-level dataframe unique patient_id, and add diabetes：
+            - Patient_ID 
+            - diabetes (0/1)
+    """
+    df = df.copy()
+
+    # 1. str -> num 
+    df["Test_Results_clean"] = df["Test_Results"].astype(str)
+
+    df["Test_Results_clean"] = pd.to_numeric(df["Test_Results_clean"], errors="coerce")
+
+    # 2. Initialized 
+    df["diabetes"] = 0
+
+    # 3. Clinical definition of diabetes 
+    # HbA1c ≥ 6.5%
+    df.loc[
+        (df["Test"] == "HbA1c") & (df["Test_Results_clean"] >= 6.5),
+        "diabetes"
+    ] = 1
+
+    # Glucose ≥ 7.0 mmol/L
+    df.loc[
+        (df["Test"] == "Glucose") & (df["Test_Results_clean"] >= 7.0),
+        "diabetes"
+    ] = 1
+
+    # 4. merged by patinets, meet one of the test, diabetes = 1 
+    df_patient = (
+        df.groupby("Patient_ID")["diabetes"]
+        .max()
+        .reset_index()
+    )
+
+    return df_patient
+
+
+def build_final_patient_df(df):
+    """
+    Output:
+        1 row per patient with a binary 'diabetes' indicator.
+    """
+    
+    df = df.copy()
+
+    df_diabetes = build_diabetes_patient_df(df)
+
+    df_base = df.drop(columns=["Test", "Test_Results"], errors = 'ignore')
+    df_base = df_base.drop_duplicates(subset=["Patient_ID"])
+
+    df_final = df_base.merge(df_diabetes, on="Patient_ID", how="left")
+    df_final["diabetes"] = df_final["diabetes"].fillna(0)
+
+    return df_final
+
+    
 # Construct family history data
 def process_family_history(family_df: str, final_cohort: pd.DataFrame) -> pd.DataFrame:
     """
@@ -281,29 +346,48 @@ def process_family_history(family_df: str, final_cohort: pd.DataFrame) -> pd.Dat
         - FamilyDiagnosis (semicolon-separated list of family ICD-9 diagnosis codes)
         - FamilyDescription (semicolon-separated list of family disease descriptions)
     """
-    
     if family_df is None or family_df.empty: 
-        return final_cohort
+        return final_cohort.assign(FamilyRelationship=np.nan, FamilyDiagnosis=np.nan, 
+                                   FamilyDescription=np.nan, Family_History=0)
 
-    family = family_df.copy()
+    fam = family_df.copy()
+    fam.columns = fam.columns.str.strip().str.replace('"', '', regex=False)
     
-    family.columns = family.columns.str.strip().str.replace('"', '', regex=False)
-    family["Patient_ID"] = family["Patient_ID"].astype(str)
+    col_map = {"Relationship_orig": "FamilyRelationship", 
+               "DiagnosisCode_orig": "FamilyDiagnosis", 
+               "DiagnosisText_orig": "FamilyDescription"}
 
-    cols = ["Patient_ID", "Relationship_orig", "DiagnosisCode_orig", "DiagnosisText_orig"]
-    family = family[cols].drop_duplicates()
+    if "Patient_ID" not in fam.columns or not all(c in fam.columns for c in col_map.keys()):
+        return final_cohort.assign(FamilyRelationship=np.nan, FamilyDiagnosis=np.nan, 
+                                   FamilyDescription=np.nan, Family_History=0)
 
-    family.rename(columns={
-        "Relationship_orig": "FamilyRelationship",
-        "DiagnosisCode_orig": "FamilyDiagnosis",
-        "DiagnosisText_orig": "FamilyDescription"}, inplace = True)
+    fam["Patient_ID"] = fam["Patient_ID"].astype(str)
+    fam = fam[["Patient_ID"] + list(col_map.keys())].drop_duplicates().rename(columns=col_map)
 
-    
-    fam_grouped = family.groupby("Patient_ID").agg(
-        lambda x: "; ".join(x.dropna().unique())
+    # Add the depression indicator BEFORE grouping
+    depression_codes = {"296", "300", "309", "311"}
+    fam["Family_History"] = fam["FamilyDiagnosis"].astype(str).str.contains("|".join(depression_codes), na=False).astype(int)
+
+    def join_str(x):
+        return "; ".join(x.dropna().unique().astype(str))
+
+    fam_grouped = fam.groupby("Patient_ID").agg(
+        FamilyRelationship=("FamilyRelationship", join_str),
+        FamilyDiagnosis=("FamilyDiagnosis", join_str),
+        FamilyDescription=("FamilyDescription", join_str),
+        Family_History=("Family_History", "max")
     ).reset_index()
+
+    expected_cols = ["FamilyRelationship", "FamilyDiagnosis", "FamilyDescription", "Family_History"]
+    for c in expected_cols:
+        if c in final_cohort.columns:
+            final_cohort = final_cohort.drop(columns=[c])
+
+    merged_cohort = final_cohort.merge(fam_grouped, on="Patient_ID", how="left")
+    merged_cohort["Family_History"] = merged_cohort["Family_History"].fillna(0).astype(int)
     
-    return final_cohort.merge(fam_grouped, on="Patient_ID", how="left")
+    return merged_cohort
+
 
 # Construct number of comorbidities data
 def calculate_comorbidities(encounter_dx: pd.DataFrame, final_cohort: pd.DataFrame) -> pd.DataFrame:
@@ -393,6 +477,8 @@ def filter_target_population_pipeline():
     else:
         patient = pd.read_csv(patient_path, dtype=str, sep="|", engine="python")
         patient.to_pickle(patient_pickle)
+    patient["Sex"] = np.where(
+        patient["Sex"].astype(str).str.strip().str.upper() == 'MALE', 1, 0)
 
     # --- Load labs ---
     lab_pickle = lab_path.replace(".csv", ".pkl")
@@ -413,7 +499,8 @@ def filter_target_population_pipeline():
         family_df.to_pickle(family_pickle)
     else:
         family_df = pd.DataFrame()
-
+        
+    # --- Run Pipeline Steps
     encounter_dx_clean = clean_column_names(encounter_dx)
     encounter_dx_condition = add_condition_column(encounter_dx_clean)
 
@@ -426,8 +513,7 @@ def filter_target_population_pipeline():
     
     final_patient = calculate_comorbidities(encounter_dx_clean, final_patient)
     final_patient = process_lab_data(labs_df, final_patient)
+    final_patient = build_final_patient_df(final_patient)
     final_patient = process_family_history(family_df, final_patient)
 
     return final_patient
-
- 

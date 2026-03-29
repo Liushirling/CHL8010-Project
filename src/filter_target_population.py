@@ -345,6 +345,7 @@ def process_family_history(family_df: str, final_cohort: pd.DataFrame) -> pd.Dat
         - FamilyRelationship (semicolon-separated list of family members)
         - FamilyDiagnosis (semicolon-separated list of family ICD-9 diagnosis codes)
         - FamilyDescription (semicolon-separated list of family disease descriptions)
+        - Family_History (1 if family history of depression exists, else 0)
     """
     if family_df is None or family_df.empty: 
         return final_cohort.assign(FamilyRelationship=np.nan, FamilyDiagnosis=np.nan, 

@@ -1,0 +1,40 @@
+Data Schema Standardization Across Datasets
+
+Objective To ensure consistency across multiple EMR datasets
+(encounter_dx, lab, family), we identify a shared column structure
+(schema) and standardize column positions based on their meaning.
+
+Observed Pattern Across Datasets
+
+Position Mapping: df.columns[0] → Primary ID (table-specific)
+df.columns[1] → Network_ID df.columns[2] → Site_ID df.columns[3] →
+Patient_ID df.columns[4] → Encounter_ID df.columns[5] → Cycle_ID
+df.columns[-1] → DateCreated
+
+Dataset-Specific Columns
+
+Encounter_dx: [6] DiagnosisText_orig [7] DiagnosisText_calc [8]
+DiagnosisCodeType_orig [9] DiagnosisCodeType_calc [10]
+DiagnosisCode_orig [11] DiagnosisCode_calc
+
+Lab: [6] PerformedDate [7] Name_orig [8] Name_calc [9] CodeType_orig
+[10] CodeType_calc [11] Code_orig [12] Code_calc [13] TestResult_orig
+[14] TestResult_calc [15] UpperNormal [16] LowerNormal [17] NormalRange
+[18] UnitOfMeasure_orig [19] UnitOfMeasure_calc
+
+Family: [6] DiagnosisText_orig [7] DiagnosisText_calc [8]
+DiagnosisCodeType_orig [9] DiagnosisCodeType_calc [10]
+DiagnosisCode_orig [11] DiagnosisCode_calc [12] Relationship_orig [13]
+Relationship_Side_calc [14] Relationship_Degree_calc [15] AgeAtOnset
+[16] VitalStatus [17] WasCauseOfDeath [18] AgeAtDeath
+
+Key Insight All datasets follow a consistent structure: [ID] +
+[Network] + [Site] + [Patient] + [Encounter] + [Cycle] +
+[Domain-specific fields] + [DateCreated]
+
+Why This Matters - Enables standardized column access - Facilitates
+merging across datasets - Supports reusable pipeline functions - Allows
+schema validation
+
+Conclusion All datasets share a consistent structural schema, enabling
+standardized and scalable data processing.

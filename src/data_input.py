@@ -76,7 +76,7 @@ def read_csv_with_badlines(filepath: str, sep: str = "|", chunksize: int = 100_0
     return df_good, df_bad
 
 # Paths 
-def get_output_dir(base_dir: str = "../data/output") -> Path:
+def get_output_dir(base_dir: str = "../raw/output") -> Path:
     out = Path(base_dir)
     out.mkdir(parents=True, exist_ok=True)
     return out

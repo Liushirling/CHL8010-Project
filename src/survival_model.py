@@ -143,29 +143,21 @@ def run_survival_analysis(final_patient):
     KM_curves_and_LRT(df)
 
     # --- Confounder finding---
-    # set the exposure variable to dummy variables 
+    # set the exposure variable to dummy variables
+    df = df[df["exposure"] != "aco"]
     df = pd.get_dummies(df, columns=["exposure"], drop_first=True)
 
     # run confounder 
     confounders = ["age", "Sex", "Num_Comorbidities", "diabetes", "Family_History"]
-    confounder_result_copd, confounder_summary_copd = confounder_table(
+    confounder_result, confounder_summary = confounder_table(
         df=df,
         duration_col="duration",
         event_col="event",
         exposure_var="exposure_copd",
         confounders=confounders
     )
-    confounder_result_asthma, confounder_summary_asthma = confounder_table(
-        df=df,
-        duration_col="duration",
-        event_col="event",
-        exposure_var="exposure_asthma",
-        confounders=confounders
-    )
-    print(confounder_result_copd)
-    print("\n", confounder_summary_copd)
-    print(confounder_result_asthma)
-    print("\n", confounder_summary_asthma)
 
-
+    print(confounder_result)
+    print("\n", confounder_summary) 
+    
     print(result.summary)

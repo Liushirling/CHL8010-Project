@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import numpy as np
 
 BASE_PATH = "../raw/output"
 
@@ -64,6 +65,22 @@ def standardize_categorical_columns(df, categorical_cols):
                 .str.upper()
             )
 
+    return df
+
+# Convert Sex into binary indicator (Male = 1)
+def encode_binary_sex(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Standardizes the 'Sex' column to binary
+    Output:
+        Sex: 1/0 (Male = 1, Female/Other = 0)
+    """
+    if "Sex" in df.columns:
+        df["Sex"] = np.where(
+            df["Sex"].astype(str)
+            .str.strip().str.upper()
+            .str.startswith('M'),
+            1, 0
+        )
     return df
 
 # Date variable standardization
@@ -206,6 +223,9 @@ def clean_dataset(file_name, output_name, num_cols=[]):
 
     # 5. convert numeric columns
     df = convert_numeric_cols_and_remove_negative(df, num_cols)
+    
+    # 6. encode Sex column (only if column exist)
+    df = encode_binary_sex(df)
 
     # 6. ICD-related preprocessing (only if columns exist)
     if "DiagnosisCode_calc" in df.columns and "DiagnosisCodeType_calc" in df.columns:

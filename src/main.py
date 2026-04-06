@@ -69,10 +69,10 @@ out_path, n = fix_encounter_dx_still_bad_lines(
     expected_n_cols=13,
 )
 merge_good_cleaned_and_still_bad(
-    good_path="../data/output/encounter_dx_final.csv",
-    bad_cleaned_path="../data/output/encounter_dx_bad_cleaned_filtered.csv",
-    still_bad_fixed_path="../data/output/encounter_dx_bad_still_unreadable_fixed.csv",
-    out_path="../data/output/encounter_dx_final.csv",
+    good_path="../raw/output/encounter_dx_final.csv",
+    bad_cleaned_path="../raw/output/encounter_dx_bad_cleaned_filtered.csv",
+    still_bad_fixed_path="../raw/output/encounter_dx_bad_still_unreadable_fixed.csv",
+    out_path="../raw/output/encounter_dx_final.csv",
     sep="|",
     label="Encounter_dx"
 )

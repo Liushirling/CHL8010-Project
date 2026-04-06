@@ -159,5 +159,4 @@ def run_survival_analysis(final_patient):
 
     print(confounder_result)
     print("\n", confounder_summary) 
-    
-    print(result.summary)
+

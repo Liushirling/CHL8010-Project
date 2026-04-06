@@ -64,8 +64,8 @@ filter_bad_cleaned_keep_only_readable(
     label="encounter_dx",
 )
 out_path, n = fix_encounter_dx_still_bad_lines(
-    input_path="../data/output/encounter_dx_bad_still_unreadable.csv",
-    output_path="../data/output/encounter_dx_bad_still_unreadable_fixed.csv",
+    input_path="../raw/output/encounter_dx_bad_still_unreadable.csv",
+    output_path="../raw/output/encounter_dx_bad_still_unreadable_fixed.csv",
     expected_n_cols=13,
 )
 merge_good_cleaned_and_still_bad(

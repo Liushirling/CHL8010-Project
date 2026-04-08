@@ -42,12 +42,12 @@ python src/main.py
 
 ## Features / Pipeline Logic
 
-### **Data Input**
+### **Data Input (`data_input.py`)**
   - Automatically detect and load CSV/Pickle files, cache cleaned data (saving clean datasets as `.csv` and `.pkl`).
   - Seamlessly process large files with chunk-based parsing, automatically detect parsing errors.
   - Features automatic "bad line" recovery, which can isolate damaged lines, remove invalid escape characters/quotes, repair misaligned delimiters, and merge the recovered data back into the main dataset.
 
-### **Data Cleaning**
+### **Data Cleaning (`data_cleaning.py`)**
   - Cleans column headers and strips string quotes.
   - Standardizes pseudo-missing data types into `pd.NA`.
   - Identify and remove clinically inappropriate dates.
@@ -55,13 +55,13 @@ python src/main.py
   - Binarization of `Sex` variable and extracts `ICD3` categories from `ICD9` codes (e.g., 490.3 -> 490).
   - Removes duplicates.
 
-### **Filter Target Population**
+### **Filter Target Population (`filter_target_population.py`）**
   - Establishes a flexible `STUDY CONFIGURATION` and `DATASET SCHEMA` to easily map columns by index and swap out study exposures or ICD-9 codes without altering core functions.
   - Filters patiens into distinct exposure groups based on their specific ICD-9 diagnosis history.
   - Determines a patient-specific `index_date` based on the sequence of their diagnoses, dropping patients with prior events to ensure incident risk tracking
   - Computes the patient's exact age at their index dates and calculates the duration of follow-up (time to event or study censor date).
 
-### **Survival Analysis**
+### **Survival Analysis （`survival_model.py`)**
   - Performs right-censored time-to-event modeling to evaluate the incidence risk of depression.
   - **Kaplan-Meier Estimator**: Plots survival curves for the Asthma, COPD, and ACO cohorts with confidence intervals.
   - **Log-Rank Testing**: Conducts pairwise statistical tests between the three exposure groups to assess the differences in survival probabilities.

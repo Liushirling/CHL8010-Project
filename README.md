@@ -57,9 +57,11 @@ python src/main.py
 
 ### **Filter Target Population (`filter_target_population.py`）**
   - Establishes a flexible `STUDY CONFIGURATION` and `DATASET SCHEMA` to easily map columns by index and swap out study exposures or ICD-9 codes without altering core functions.
-  - Filters patiens into distinct exposure groups based on their specific ICD-9 diagnosis history.
+  - Filters patients into distinct exposure groups based on their specific ICD-9 diagnosis history.
   - Determines a patient-specific `index_date` based on the sequence of their diagnoses, dropping patients with prior events to ensure incident risk tracking
   - Computes the patient's exact age at their index dates and calculates the duration of follow-up (time to event or study censor date).
+  - Extracts baseline covariates prior to the index date, integrating clinical diabetes status (based on Glucose/HbA1c thresholds), family history indicator of depression, and a baseline comorbidity count (excluding primary study conditions).
+
 
 ### **Survival Analysis （`survival_model.py`)**
   - Performs right-censored time-to-event modeling to evaluate the incidence risk of depression.

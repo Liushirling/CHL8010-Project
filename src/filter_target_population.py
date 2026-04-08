@@ -76,7 +76,7 @@ fam_rel = 12
 # ---------------------------------------------------------------------
 
 def load_data(file_path, dtype=str, sep="|", engine="python",
-              quoting=None, on_bad_lines=None):
+              quoting=0, on_bad_lines="skip"):
     """
     General loader: prefer .pkl, otherwise load .csv and cache as .pkl
     """
@@ -654,6 +654,7 @@ def filter_target_population_pipeline():
 
     # --- Run Pipeline Steps
     encounter_dx_condition = add_condition_column(encounter_dx)
+    
     patient_dx = build_patient_dx_dict(encounter_dx_condition)
     patient_with_dx = merge_patient_dx(patient, patient_dx)
 
@@ -666,5 +667,32 @@ def filter_target_population_pipeline():
     final_patient = process_lab_data(labs_df, final_patient)
     final_patient = build_final_patient_df(final_patient)
     final_patient = process_family_history(family_df, final_patient)
+    
+    final_patient.drop(columns = ['BirthMonth', 'OptedOut', 'OptOutDate'], inplace=True, errors='ignore')
+
+    # --- Reorder columns ---
+    front_cols = [
+        "Patient_ID",
+        "age",
+        patient.columns[pat_sex],
+        patient.columns[pat_birth],
+        "dx_dict",
+        "exposure",
+        "index_date"
+    ]
+
+    back_cols = [covariates1, covariates2, covariates3, "event", "end_date", "duration"]
+
+    all_cols = final_patient.columns.tolist()
+
+    mid_cols = [c for c in all_cols if c not in front_cols and c not in back_cols]
+
+    ordered_cols = (
+        [c for c in front_cols if c in all_cols] +
+        mid_cols +
+        [c for c in back_cols if c in all_cols]
+    )
+
+    final_patient = final_patient[ordered_cols]
 
     return final_patient

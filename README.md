@@ -43,31 +43,42 @@ python src/main.py
 ## Features / Pipeline Logic
 
 ### **Data Input (`data_input.py`)**
-  - Automatically detect and load CSV/Pickle files, cache cleaned data (saving clean datasets as `.csv` and `.pkl`).
-  - Seamlessly process large files with chunk-based parsing, automatically detect parsing errors.
-  - Features automatic "bad line" recovery, which can isolate damaged lines, remove invalid escape characters/quotes, repair misaligned delimiters, and merge the recovered data back into the main dataset.
+
+- Automatically detect and load CSV/Pickle files, cache cleaned data (saving clean datasets as `.csv` and `.pkl`).
+- Seamlessly process large files with chunk-based parsing, automatically detect parsing errors.
+- Features automatic "bad line" recovery, which can isolate damaged lines, remove invalid escape characters/quotes, repair misaligned delimiters, and merge the recovered data back into the main dataset.
 
 ### **Data Cleaning (`data_cleaning.py`)**
-  - Cleans column headers and strips string quotes.
-  - Standardizes pseudo-missing data types into `pd.NA`.
-  - Identify and remove clinically inappropriate dates.
-  - Determine valid value ranges (convert abnormal negative test results to `NA`).
-  - Binarization of `Sex` variable and extracts `ICD3` categories from `ICD9` codes (e.g., 490.3 -> 490).
-  - Removes duplicates.
+
+- Cleans column headers and strips string quotes.
+- Standardizes pseudo-missing data types into `pd.NA`.
+- Identify and remove clinically inappropriate dates.
+- Determine valid value ranges (convert abnormal negative test results to `NA`).
+- Binarization of `Sex` variable and extracts `ICD3` categories from `ICD9` codes (e.g., 490.3 -> 490).
+- Removes duplicates.
 
 ### **Filter Target Population (`filter_target_population.py`）**
-  - Establishes a flexible `STUDY CONFIGURATION` and `DATASET SCHEMA` to easily map columns by index and swap out study exposures or ICD-9 codes without altering core functions.
-  - Filters patients into distinct exposure groups based on their specific ICD-9 diagnosis history.
-  - Determines a patient-specific `index_date` based on the sequence of their diagnoses, dropping patients with prior events to ensure incident risk tracking
-  - Computes the patient's exact age at their index dates and calculates the duration of follow-up (time to event or study censor date).
-  - Extracts baseline covariates prior to the index date, integrating clinical diabetes status (based on Glucose/HbA1c thresholds), family history indicator of depression, and a baseline comorbidity count (excluding primary study conditions).
 
+- Establishes a flexible `STUDY CONFIGURATION` and `DATASET SCHEMA` to easily map columns by index and swap out study exposures or ICD-9 codes without altering core functions.
+- Filters patients into distinct exposure groups based on their specific ICD-9 diagnosis history.
+- Determines a patient-specific `index_date` based on the sequence of their diagnoses, dropping patients with prior events to ensure incident risk tracking
+- Computes the patient's exact age at their index dates and calculates the duration of follow-up (time to event or study censor date).
+- Extracts baseline covariates prior to the index date, integrating clinical diabetes status (based on Glucose/HbA1c thresholds), family history indicator of depression, and a baseline comorbidity count (excluding primary study conditions).
 
 ### **Survival Analysis （`survival_model.py`)**
-  - Performs right-censored time-to-event modeling to evaluate the incidence risk of depression.
-  - **Kaplan-Meier Estimator**: Plots survival curves for the Asthma, COPD, and ACO cohorts with confidence intervals.
-  - **Log-Rank Testing**: Conducts pairwise statistical tests between the three exposure groups to assess the differences in survival probabilities.
-  - **Confounder Assessment**: Adjusts percentage change in log hazard ratios for relevant baseline covariates.
+
+- Performs right-censored time-to-event modeling to evaluate the incidence risk of depression.
+- **Kaplan-Meier Estimator**: Plots survival curves for the Asthma, COPD, and ACO cohorts with confidence intervals.
+- **Log-Rank Testing**: Conducts pairwise statistical tests between the three exposure groups to assess the differences in survival probabilities.
+- **Confounder Assessment**: Adjusts percentage change in log hazard ratios for relevant baseline covariates.
+
+### How to Adapt the Study Configuration
+
+To adapt the configuration for a new study, modify these three elements in the script:
+
+1. **Conditions:** Replace the exposures (e.g., `exposure1 = "asthma"`) and event (e.g., `event = "depression"`), and their corresponding ICD codes with the target exposures and outcomes (e.g., `exposure1_code = [493]`).
+2. **Covariates:** Update the clinical thresholds (e.g., `test1_key, test1_val = "glucose", "Glucose"` and `threshold1 = 7.0`) and binary flags to match the required confounders (e.g., `covariates1 = "diabetes"`).
+3. **Schema Indices:** Check the `data_schema_standardization.txt`. Update the bracketed index numbers in the script (e.g., `enc_id = 3`) if the column positions in the raw data differ.
 
 
 ## Final Dataset Schema
